@@ -58,17 +58,14 @@ void    swap_pipes(int fd_in[2], int fd_out[2])
     fd_in[1] ^= fd_out[1];
 }
 
-void	init_pipe(t_pipe *pipe)
+void	clean_pipe(t_pipe *pipe)
 {
+	if (pipe->fds[0] != -1)
+		close(pipe->fds[0]);
+	if (pipe->fds[1] != -1)
+		close(pipe->fds[1]);
 	pipe->count = 0;
 	pipe->is_open = false;
-}
-void	close_pipes(int fds[2])
-{
-	if (fds[0] != -1)
-		close(fds[0]);
-	if (fds[1] != -1)
-		close(fds[1]);
 }
 
 int	main(int argc, char **argv, char **env)
@@ -80,8 +77,8 @@ int	main(int argc, char **argv, char **env)
 	bool	do_swap;
 	t_data	data;
 
-	init_pipe(&fd_in);
-	init_pipe(&fd_out);
+	clean_pipe(&fd_in);
+	clean_pipe(&fd_out);
 	do_swap = true;
 	is_fd_in = true;
 	init_data(&data, argv, env, argc);
@@ -112,19 +109,13 @@ int	main(int argc, char **argv, char **env)
 			make_children(i, env, &fd_in, &fd_out, &data);
 		do_swap = !do_swap;
 		if (fd_in.count == 2)
-		{
-			close_pipes(fd_in.fds);
-			init_pipe(&fd_in);
-		}
+			clean_pipe(&fd_in);
 		if (fd_out.count == 2)
-		{
-			close_pipes(fd_out.fds);
-			init_pipe(&fd_out);
-		}
+			clean_pipe(&fd_out);
 		++i;
 	}
-	close_pipes(fd_in.fds);
-	close_pipes(fd_out.fds);
+	clean_pipe(&fd_in);
+	clean_pipe(&fd_out);
 	while (wait(NULL) != -1)
 		;
 	return (EXIT_SUCCESS);
