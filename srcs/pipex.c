@@ -82,30 +82,22 @@ int	main(int argc, char **argv, char **env)
 	{
 		if (i != argc - 1)
 		{
-			if (i & 1)
-			{
-				if (pipe(fd_in.fds) == - 1)
-					perror("pipe in in main");
-				fd_in.is_open = true;
-			}
-			else
-			{
-				if (pipe(fd_out.fds) == - 1)
-					perror("pipe out in main");
-				fd_out.is_open = true;
-			}
+			if (pipe(fd_in.fds) == - 1)
+				perror("pipe in in main");
+			fd_in.is_open = true;
 		}
+		// ft_printf("i=%d inopen=%d outopen=%d\n", i, fd_in.is_open, fd_out.is_open);
 		fd_in.count += fd_in.is_open;
 		fd_out.count += fd_out.is_open;
-		if (i & 1)
-			make_children(i, env, &fd_out, &fd_in, &data);
-		else
-			make_children(i, env, &fd_in, &fd_out, &data);
+		make_children(i, env, &fd_out, &fd_in, &data);
 		if (fd_in.count == 2)
 			clean_pipe(&fd_in);
 		if (fd_out.count == 2)
 			clean_pipe(&fd_out);
 		++i;
+		t_pipe	tmp = fd_in;
+		fd_in = fd_out;
+		fd_out = tmp;
 	}
 	clean_pipe(&fd_in);
 	clean_pipe(&fd_out);
