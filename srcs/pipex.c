@@ -12,12 +12,12 @@
 
 #include "pipex.h"
 
-void	do_cmd(int i, char **env, bool inpipe_open, bool outpipe_open, int *fd_in, int *fd_out, t_data *data, int ac)
+void	do_cmd(int i, char **env, bool inpipe_open, bool outpipe_open, int *fd_in, int *fd_out, t_data *data, int argc)
 {
 	char *cmd;
 
 	cmd = NULL;
-	(void)ac;
+	(void)argc;
 	if (inpipe_open == true)
 	{
 		close(fd_in[1]);
@@ -32,7 +32,7 @@ void	do_cmd(int i, char **env, bool inpipe_open, bool outpipe_open, int *fd_in, 
 	perror("execve: ");
 }
 
-int	make_children(int i, char **env, bool inpipe_open, bool outpipe_open, int *fd_in, int *fd_out, t_data *data, int ac)
+int	make_children(int i, char **env, bool inpipe_open, bool outpipe_open, int *fd_in, int *fd_out, t_data *data, int argc)
 {
 	pid_t	pid;
 
@@ -46,12 +46,12 @@ int	make_children(int i, char **env, bool inpipe_open, bool outpipe_open, int *f
 		return (0);
 	else
 	{
-		do_cmd(i, env, inpipe_open, outpipe_open, fd_in, fd_out, data, ac);
-		exit (1);
+		do_cmd(i, env, inpipe_open, outpipe_open, fd_in, fd_out, data, argc);
+		exit(1);
 	}
 }
 
-int	main(int ac, char **av, char **env)
+int	main(int argc, char **argv, char **env)
 {
 	int		i;
 	int		fd_in[2];
@@ -61,25 +61,21 @@ int	main(int ac, char **av, char **env)
 	bool	outpipe_open;
 	bool	inpipe_open;
 	int		pipe_type;
-	int		pipe_count;
 	bool	do_swap;
 	t_data	data;
 
-	init_data(&data, av, env, ac);
+	init_data(&data, argv, env, argc);
 	inpipe_count = 0;
 	outpipe_count = 0;
-	i = 1;
 	pipe_type = 1;
 	outpipe_open = false;
 	inpipe_open = false;
-	pipe_count = 0;
 	do_swap = true;
-	while (i < ac)
+	i = 1;
+	while (i < argc)
 	{
-		if (ft_strncmp(av[i], "pipe", 5) == 0)
+		if (i != argc - 1)
 		{
-			pipe_count++;
-			i++;
 			if (pipe_type == 1)
 			{
 				if (pipe(fd_in) == - 1)
@@ -95,38 +91,35 @@ int	main(int ac, char **av, char **env)
 				outpipe_open = true;
 			}
 		}
+		if (inpipe_open == true)
+			inpipe_count++;
+		if (outpipe_open == true)
+			outpipe_count++;
+		if (do_swap == true)
+		{
+			do_swap = false;
+			make_children(i, env, outpipe_open, inpipe_open, fd_out, fd_in, &data, argc);
+		}
 		else
 		{
-			if (inpipe_open == true)
-				inpipe_count++;
-			if (outpipe_open == true)
-				outpipe_count++;
-			if (do_swap == true)
-			{
-				do_swap = false;
-				make_children(i, env, outpipe_open, inpipe_open, fd_out, fd_in, &data, ac);
-			}
-			else
-			{
-				do_swap = true;
-				make_children(i, env, inpipe_open, outpipe_open, fd_in, fd_out, &data, ac);
-			}
-			i++;
-			if (inpipe_count == 2)
-			{
-				close(fd_in[0]);
-				close(fd_in[1]);
-				inpipe_open = false;
-				inpipe_count = 0;
-			}
-			if (outpipe_count == 2)
-			{
-				close(fd_out[0]);
-				close(fd_out[1]);
-				outpipe_open = false;
-				outpipe_count = 0;
-			}
+			do_swap = true;
+			make_children(i, env, inpipe_open, outpipe_open, fd_in, fd_out, &data, argc);
 		}
+		if (inpipe_count == 2)
+		{
+			close(fd_in[0]);
+			close(fd_in[1]);
+			inpipe_open = false;
+			inpipe_count = 0;
+		}
+		if (outpipe_count == 2)
+		{
+			close(fd_out[0]);
+			close(fd_out[1]);
+			outpipe_open = false;
+			outpipe_count = 0;
+		}
+		++i;
 	}
 	if (outpipe_open == true)
 	{
