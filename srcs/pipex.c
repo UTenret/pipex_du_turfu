@@ -31,15 +31,14 @@ void	do_cmd(int i, char **env, t_pipe *fd_in, t_pipe *fd_out, t_data *data)
 
 int	make_children(int i, char **env, t_pipe *fd_in, t_pipe *fd_out, t_data *data)
 {
-	pid_t	pid;
+	const pid_t	pid = fork();
 
-	pid = fork();
 	if (pid == -1)
 	{
 		perror("fork");
 		exit(EXIT_FAILURE);
 	}
-	if (pid != 0)
+	else if (pid != 0)
 		return (EXIT_SUCCESS);
 	else
 	{
@@ -73,21 +72,17 @@ int	main(int argc, char **argv, char **env)
 	int		i;
 	t_pipe	fd_in;
 	t_pipe	fd_out;
-	bool	is_fd_in;
-	bool	do_swap;
 	t_data	data;
 
 	clean_pipe(&fd_in);
 	clean_pipe(&fd_out);
-	do_swap = true;
-	is_fd_in = true;
 	init_data(&data, argv, env, argc);
 	i = 1;
 	while (i < argc)
 	{
 		if (i != argc - 1)
 		{
-			if (is_fd_in)
+			if (i & 1)
 			{
 				if (pipe(fd_in.fds) == - 1)
 					perror("pipe in in main");
@@ -99,15 +94,13 @@ int	main(int argc, char **argv, char **env)
 					perror("pipe out in main");
 				fd_out.is_open = true;
 			}
-			is_fd_in = !is_fd_in;
 		}
 		fd_in.count += fd_in.is_open;
 		fd_out.count += fd_out.is_open;
-		if (do_swap)
+		if (i & 1)
 			make_children(i, env, &fd_out, &fd_in, &data);
 		else
 			make_children(i, env, &fd_in, &fd_out, &data);
-		do_swap = !do_swap;
 		if (fd_in.count == 2)
 			clean_pipe(&fd_in);
 		if (fd_out.count == 2)

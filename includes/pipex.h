@@ -26,7 +26,6 @@ typedef struct s_data {
 	int		**pipe_fd;
 	int		fd[2];
 	pid_t	pid;
-	int		child_nbr;
 	bool	here_doc;
 }					t_data;
 
@@ -52,8 +51,6 @@ void	unlink_here_doc(void);
 ///////////////////init_data///////////////////////
 
 void	init_data(t_data *data, char **av, char **env, int ac);
-void	init_data_fd(t_data *data, char **av, int ac);
-void	init_data_pipe(t_data *data, int ac);
 void	init_data_cmd_names(t_data *data, int ac);
 void	init_data_path(t_data *data, char **env);
 
