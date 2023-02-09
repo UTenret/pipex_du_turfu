@@ -47,24 +47,22 @@ int	make_children(int i, char **env, t_pipe *fd_in, t_pipe *fd_out, t_data *data
 	}
 }
 
-void    swap_pipes(int fd_in[2], int fd_out[2])
-{
-    fd_in[0] ^= fd_out[0];
-    fd_out[0] ^= fd_in[0];
-    fd_in[0] ^= fd_out[0];
-    fd_in[1] ^= fd_out[1];
-    fd_out[1] ^= fd_in[1];
-    fd_in[1] ^= fd_out[1];
-}
-
 void	clean_pipe(t_pipe *pipe)
 {
 	if (pipe->fds[0] != -1)
 		close(pipe->fds[0]);
 	if (pipe->fds[1] != -1)
 		close(pipe->fds[1]);
-	pipe->count = 0;
 	pipe->is_open = false;
+}
+
+void	swap_pipes(t_pipe *left, t_pipe *right)
+{
+	t_pipe	tmp;
+
+	tmp = *left;
+	*left = *right;
+	*right = tmp;
 }
 
 int	main(int argc, char **argv, char **env)
@@ -86,18 +84,12 @@ int	main(int argc, char **argv, char **env)
 				perror("pipe in in main");
 			fd_in.is_open = true;
 		}
-		// ft_printf("i=%d inopen=%d outopen=%d\n", i, fd_in.is_open, fd_out.is_open);
-		fd_in.count += fd_in.is_open;
-		fd_out.count += fd_out.is_open;
+		ft_printf("i=%d inopen=%d outopen=%d\n", i, fd_in.is_open, fd_out.is_open);
 		make_children(i, env, &fd_out, &fd_in, &data);
-		if (fd_in.count == 2)
-			clean_pipe(&fd_in);
-		if (fd_out.count == 2)
+		if (i != 1)
 			clean_pipe(&fd_out);
 		++i;
-		t_pipe	tmp = fd_in;
-		fd_in = fd_out;
-		fd_out = tmp;
+		swap_pipes(&fd_in, &fd_out);
 	}
 	clean_pipe(&fd_in);
 	clean_pipe(&fd_out);

@@ -31,7 +31,6 @@ typedef struct s_data {
 
 typedef struct s_pipe {
 	int		fds[2];
-	int		count;
 	bool	is_open;
 }	t_pipe;
 
