@@ -30,6 +30,12 @@ typedef struct s_data {
 	bool	here_doc;
 }					t_data;
 
+typedef struct s_pipe {
+	int		fds[2];
+	int		count;
+	bool	is_open;
+}	t_pipe;
+
 ///////////////////free_func///////////////////////
 
 void	free_cmd_name(t_data *data);
